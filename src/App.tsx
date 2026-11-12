@@ -132,11 +132,7 @@ export default function App() {
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-cyan-500/20 selection:text-cyan-300 w-full max-w-full overflow-x-hidden">
       
       {/* Top Header */}
-      <Header
-        settings={settings}
-        isAdminLoggedIn={isAdminLoggedIn}
-        onOpenAdmin={() => setShowAdminPanel(true)}
-      />
+      <Header settings={settings} />
 
       <main className="flex-1">
         {/* Section 1: Hero & Real-time Stock Metrics (Purely USD) */}

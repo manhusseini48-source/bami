@@ -1,11 +1,11 @@
 import React from 'react';
-import { Brain, Lock, Send } from 'lucide-react';
+import { Brain, Send } from 'lucide-react';
 import { BamiSettings } from '../types';
 
 interface HeaderProps {
   settings: BamiSettings;
-  isAdminLoggedIn: boolean;
-  onOpenAdmin: () => void;
+  isAdminLoggedIn?: boolean;
+  onOpenAdmin?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -77,20 +77,8 @@ export const Header: React.FC<HeaderProps> = ({
           </a>
         </nav>
 
-        {/* Zone 3: Primary Action & Admin Quick-Access */}
+        {/* Zone 3: Primary Action */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          {isAdminLoggedIn && (
-            <button
-              onClick={onOpenAdmin}
-              className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 sm:py-2 text-[11px] sm:text-xs font-semibold text-cyan-300 bg-cyan-950/70 border border-cyan-500/30 rounded-xl hover:bg-cyan-900/60 transition-colors whitespace-nowrap"
-              title="ورود به پنل مدیریت"
-            >
-              <Lock className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-              <span className="hidden sm:inline">پنل مدیریت</span>
-              <span className="sm:hidden">مدیریت</span>
-            </button>
-          )}
-
           <a
             href={`https://t.me/${settings.contactTelegram.replace('@', '')}`}
             target="_blank"
