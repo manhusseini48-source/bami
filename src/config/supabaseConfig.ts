@@ -13,6 +13,7 @@ export interface SupabaseConfig {
 }
 
 export const DEFAULT_SUPABASE_CONFIG: SupabaseConfig = {
-  url: '',
-  anonKey: '',
+  url: 'https://pyzmrhzqrthdbedfdskw.supabase.co',
+  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB5em1yaHpxcnRoZGJlZGZkc2t3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQwMTY4NDMsImV4cCI6MjEwOTU5Mjg0M30.neC6fS4WeCNGEBz3w5CcpgzhOaLp5OMzAos2xYLNFsk',
 };
+

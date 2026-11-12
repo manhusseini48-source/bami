@@ -103,8 +103,8 @@ export const INITIAL_SETTINGS: BamiSettings = {
   contactWhatsapp: '+989120000000',
   contactEmail: 'invest@bami.modesk.org',
   contactPhone: '+982191000000',
-  supabaseUrl: '',
-  supabaseAnonKey: '',
+  supabaseUrl: 'https://pyzmrhzqrthdbedfdskw.supabase.co',
+  supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB5em1yaHpxcnRoZGJlZGZkc2t3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQwMTY4NDMsImV4cCI6MjEwOTU5Mjg0M30.neC6fS4WeCNGEBz3w5CcpgzhOaLp5OMzAos2xYLNFsk',
   companyVision: 'تبدیل شدن به برترین قطب هوش مصنوعی چندزبانه و راهکارهای هوشمند تجاری با ارائه ابزارهای تحلیلی، بینایی ماشین و دستیاران هوشمند سازمانی در سطح منطقه و بازارهای جهانی.',
 
   faqs: INITIAL_FAQS,
