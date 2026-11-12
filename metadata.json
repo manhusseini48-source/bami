@@ -1,0 +1,8 @@
+{
+  "name": "Bami AI - پورتال سهام و سرمایه‌گذاری هوش مصنوعی بامی",
+  "description": "سامانه رسمی ارزش‌گذاری، خرید و مدیریت سهام هوش مصنوعی بامی (Bami AI) با نقشه راه ۱۰ فازی و پنل اختصاصی سرمایه‌گذاران.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
