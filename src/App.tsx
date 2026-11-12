@@ -26,6 +26,8 @@ import {
   syncFromSupabase,
   syncToSupabase,
   getActiveSupabaseCredentials,
+  fetchServerSupabaseConfig,
+  getSupabaseClient,
 } from './lib/storage';
 
 export default function App() {
@@ -44,30 +46,76 @@ export default function App() {
     }
   });
 
-  // Always fetch latest authoritative data from Supabase on startup
+  // Always fetch latest authoritative data from Supabase on startup & subscribe to Realtime changes
   useEffect(() => {
-    const creds = getActiveSupabaseCredentials();
+    let isMounted = true;
 
-    if (creds.url && creds.key) {
-      syncFromSupabase(creds.url, creds.key).then((res) => {
-        if (res.error) {
-          console.warn('Startup Supabase fetch notice:', res.error);
-          return;
+    async function loadDataAndSubscribe() {
+      // 1. Try to fetch server-wide Supabase config from /supabase-config.json (allows any device on Earth to connect!)
+      const serverCreds = await fetchServerSupabaseConfig();
+      const creds = serverCreds || getActiveSupabaseCredentials();
+
+      if (creds.url && creds.key) {
+        const res = await syncFromSupabase(creds.url, creds.key);
+        if (isMounted) {
+          if (res.settings) {
+            setSettings(res.settings);
+            saveLocalSettings(res.settings);
+          }
+          if (res.phases && res.phases.length > 0) {
+            setPhases(res.phases);
+            saveLocalPhases(res.phases);
+          }
+          if (res.shareholders && res.shareholders.length > 0) {
+            setShareholders(res.shareholders);
+            saveLocalShareholders(res.shareholders);
+          }
         }
-        if (res.settings) {
-          setSettings(res.settings);
-          saveLocalSettings(res.settings);
+
+        // 2. Setup Realtime subscription so any device updates LIVE when admin saves on another device
+        const client = getSupabaseClient(creds.url, creds.key);
+        if (client) {
+          try {
+            const channel = client
+              .channel('bami-live-sync')
+              .on('postgres_changes', { event: '*', schema: 'public', table: 'bami_settings' }, async () => {
+                const refreshed = await syncFromSupabase(creds.url, creds.key);
+                if (refreshed.settings && isMounted) {
+                  setSettings(refreshed.settings);
+                  saveLocalSettings(refreshed.settings);
+                }
+              })
+              .on('postgres_changes', { event: '*', schema: 'public', table: 'bami_phases' }, async () => {
+                const refreshed = await syncFromSupabase(creds.url, creds.key);
+                if (refreshed.phases && refreshed.phases.length > 0 && isMounted) {
+                  setPhases(refreshed.phases);
+                  saveLocalPhases(refreshed.phases);
+                }
+              })
+              .on('postgres_changes', { event: '*', schema: 'public', table: 'bami_shareholders' }, async () => {
+                const refreshed = await syncFromSupabase(creds.url, creds.key);
+                if (refreshed.shareholders && refreshed.shareholders.length > 0 && isMounted) {
+                  setShareholders(refreshed.shareholders);
+                  saveLocalShareholders(refreshed.shareholders);
+                }
+              })
+              .subscribe();
+
+            return () => {
+              client.removeChannel(channel);
+            };
+          } catch (rtErr) {
+            console.warn('Realtime subscription notice:', rtErr);
+          }
         }
-        if (res.phases && res.phases.length > 0) {
-          setPhases(res.phases);
-          saveLocalPhases(res.phases);
-        }
-        if (res.shareholders && res.shareholders.length > 0) {
-          setShareholders(res.shareholders);
-          saveLocalShareholders(res.shareholders);
-        }
-      });
+      }
     }
+
+    loadDataAndSubscribe();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Handle successful login with bamianai777 & Bai$$$nx

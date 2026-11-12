@@ -435,6 +435,27 @@ export async function syncFromSupabase(
 }
 
 /**
+ * Asynchronously tries to fetch server-wide Supabase config from /supabase-config.json
+ * This allows all devices worldwide to connect to the same database automatically!
+ */
+export async function fetchServerSupabaseConfig(): Promise<{ url: string; key: string } | null> {
+  if (typeof window === 'undefined') return null;
+  try {
+    const resp = await fetch('/supabase-config.json', { cache: 'no-store' });
+    if (resp.ok) {
+      const data = await resp.json();
+      const cleanUrl = normalizeSupabaseUrl(data.url || '');
+      const cleanKey = normalizeSupabaseKey(data.anonKey || data.key || '');
+      if (cleanUrl && cleanKey) {
+        saveActiveSupabaseCredentials(cleanUrl, cleanKey);
+        return { url: cleanUrl, key: cleanKey };
+      }
+    }
+  } catch {}
+  return null;
+}
+
+/**
  * Saves settings, phases, and shareholders directly to Supabase
  */
 export async function syncToSupabase(
@@ -445,12 +466,18 @@ export async function syncToSupabase(
   key?: string
 ): Promise<{ success: boolean; error?: string }> {
   const creds = getActiveSupabaseCredentials();
-  const finalUrl = (url || creds.url).trim();
-  const finalKey = (key || creds.key).trim();
+  const rawUrl = url || settings.supabaseUrl || creds.url;
+  const rawKey = key || settings.supabaseAnonKey || creds.key;
+  const finalUrl = normalizeSupabaseUrl(rawUrl);
+  const finalKey = normalizeSupabaseKey(rawKey);
+
+  if (!finalUrl || !finalKey) {
+    return { success: false, error: 'آدرس یا کلید اتصال به سوپابیس یافت نشد.' };
+  }
 
   const client = getSupabaseClient(finalUrl, finalKey);
   if (!client) {
-    return { success: false, error: 'آدرس یا کلید اتصال به سوپابیس یافت نشد.' };
+    return { success: false, error: 'آدرس سوپابیس نامعتبر است. فرمت صحیح: https://YOUR_PROJECT_ID.supabase.co' };
   }
 
   // Remember active credentials

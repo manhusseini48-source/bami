@@ -87,6 +87,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [saveSuccessMessage, setSaveSuccessMessage] = useState<string | null>(null);
   const [supabaseSyncStatus, setSupabaseSyncStatus] = useState<{ loading: boolean; msg?: string; isError?: boolean } | null>(null);
   const [copiedSql, setCopiedSql] = useState<boolean>(false);
+  const [copiedVpsCommand, setCopiedVpsCommand] = useState<boolean>(false);
 
   // Shareholders edit / new modal state
   const [editingShareholder, setEditingShareholder] = useState<BamiShareholder | null>(null);
@@ -1428,6 +1429,63 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   <Database className="w-4 h-4 text-teal-400" />
                   <span>دریافت آخرین اطلاعات از سوپابیس و بارگذاری در پنل</span>
                 </button>
+              </div>
+
+              {/* Universal Cross-Device Sync Guide for VPS */}
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-cyan-950/40 via-slate-900 to-slate-950 border border-cyan-500/30 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-cyan-400" />
+                    <span className="text-xs font-bold text-white">حل قطعی و دائمی نمایش تغییرات در تمام دستگاه‌ها (موبایل، لپ‌تاپ، سایر کاربران)</span>
+                  </div>
+                  <span className="text-[10px] bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 px-2 py-0.5 rounded-full font-bold">
+                    همگام‌سازی عمومی
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-300 leading-relaxed">
+                  چرا تغییرات فقط روی همین مرورگر دیده می‌شد؟ چون کاربرانی که با گوشی یا سیستم دیگر وارد سایت می‌شوند، کلید اتصال به سوپابیس را نداشتند. با دستور تک‌خطی زیر، کلید اتصال به فایل عمومی سرور شما تزریق می‌شود تا <strong className="text-emerald-400">بدون نیاز به لاگین ادمین</strong>، هر بازدیدکننده‌ای از هر جای دنیا فوراً آخرین تغییرات را مستقیماً از سوپابیس ببیند:
+                </p>
+
+                {(() => {
+                  const targetUrl = normalizeSupabaseUrl(settingsDraft.supabaseUrl || '') || 'https://YOUR_PROJECT.supabase.co';
+                  const targetKey = normalizeSupabaseKey(settingsDraft.supabaseAnonKey || '') || 'YOUR_SUPABASE_ANON_KEY';
+                  const vpsCmd = `cat << 'EOF' > /var/www/bami-ai/dist/supabase-config.json\n{"url":"${targetUrl}","anonKey":"${targetKey}"}\nEOF`;
+
+                  return (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-semibold text-slate-300">دستور فعال‌سازی در سرور لینوکس (VPS):</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(vpsCmd);
+                            setCopiedVpsCommand(true);
+                            setTimeout(() => setCopiedVpsCommand(false), 3000);
+                          }}
+                          className="px-3 py-1 rounded-lg bg-cyan-400 text-slate-950 hover:bg-cyan-300 text-xs font-bold flex items-center gap-1.5 transition-all shadow"
+                        >
+                          {copiedVpsCommand ? (
+                            <>
+                              <Check className="w-3.5 h-3.5" />
+                              <span>دستور کپی شد!</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-3.5 h-3.5" />
+                              <span>کپی دستور تک‌خطی VPS</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                      <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 font-mono text-[11px] text-cyan-300 ltr text-left overflow-x-auto">
+                        <code>{vpsCmd}</code>
+                      </div>
+                      <p className="text-[10px] text-slate-400">
+                        کافیست دستور بالا را در ترمینال سرور پیست و Enter کنید. به محض اجرای این دستور، همه دستگاه‌ها به سوپابیس متصل خواهند شد.
+                      </p>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* SQL Script Section */}
