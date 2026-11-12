@@ -14,6 +14,69 @@ let cachedClientUrl: string = '';
 let cachedClientKey: string = '';
 
 /**
+ * Cleans, sanitizes, and normalizes a Supabase project URL.
+ * Automatically fixes common mistakes:
+ * - Strips trailing slashes, /rest/v1, /rest
+ * - Converts dashboard URLs (e.g. https://supabase.com/dashboard/project/xxxx) to https://xxxx.supabase.co
+ * - Converts postgres connection strings (e.g. db.xxxx.supabase.co) to https://xxxx.supabase.co
+ * - Converts raw project reference IDs (e.g. xxxx) to https://xxxx.supabase.co
+ * - Strips wrapping quotes
+ */
+export function normalizeSupabaseUrl(rawUrl: string): string {
+  if (!rawUrl) return '';
+  let url = rawUrl.trim();
+
+  // Strip wrapping quotes
+  url = url.replace(/^["']|["']$/g, '').trim();
+
+  // Handle dashboard project URLs, e.g. https://supabase.com/dashboard/project/xxxx or https://app.supabase.com/project/xxxx
+  const dashboardMatch = url.match(/(?:app\.supabase\.com|supabase\.com\/dashboard)\/project\/([a-z0-9_-]+)/i);
+  if (dashboardMatch && dashboardMatch[1]) {
+    return `https://${dashboardMatch[1]}.supabase.co`;
+  }
+
+  // Handle postgres db connection strings, e.g. postgresql://postgres:...@db.xxxx.supabase.co:5432/postgres
+  const dbMatch = url.match(/db\.([a-z0-9_-]+)\.supabase\.co/i);
+  if (dbMatch && dbMatch[1]) {
+    return `https://${dbMatch[1]}.supabase.co`;
+  }
+
+  // If user entered only the project reference ID (e.g. 15-30 char alphanumeric string without dots or slashes)
+  if (/^[a-z0-9_-]{15,35}$/i.test(url)) {
+    return `https://${url}.supabase.co`;
+  }
+
+  // Ensure protocol
+  if (!/^https?:\/\//i.test(url)) {
+    url = `https://${url}`;
+  }
+
+  try {
+    const parsed = new URL(url);
+    // Return only the origin (e.g. https://abcdefgh.supabase.co) without /rest/v1 or pathname
+    return parsed.origin;
+  } catch {
+    url = url.replace(/\/rest\/v1\/?$/i, '');
+    url = url.replace(/\/rest\/?$/i, '');
+    url = url.replace(/\/+$/, '');
+    return url;
+  }
+}
+
+/**
+ * Sanitizes Supabase Anon Key
+ * - Strips wrapping quotes
+ * - Strips accidental 'Bearer ' prefix
+ */
+export function normalizeSupabaseKey(rawKey: string): string {
+  if (!rawKey) return '';
+  let key = rawKey.trim();
+  key = key.replace(/^["']|["']$/g, '').trim();
+  key = key.replace(/^Bearer\s+/i, '').trim();
+  return key;
+}
+
+/**
  * Returns active Supabase credentials with robust multi-layer fallback:
  * 1. Dedicated persistent localStorage
  * 2. Settings localStorage
@@ -49,8 +112,8 @@ export function getActiveSupabaseCredentials(): { url: string; key: string } {
   const configUrl = DEFAULT_SUPABASE_CONFIG.url || INITIAL_SETTINGS.supabaseUrl || '';
   const configKey = DEFAULT_SUPABASE_CONFIG.anonKey || INITIAL_SETTINGS.supabaseAnonKey || '';
 
-  const finalUrl = (fromStorageUrl || fromSettingsUrl || envUrl || configUrl).trim();
-  const finalKey = (fromStorageKey || fromSettingsKey || envKey || configKey).trim();
+  const finalUrl = normalizeSupabaseUrl(fromStorageUrl || fromSettingsUrl || envUrl || configUrl);
+  const finalKey = normalizeSupabaseKey(fromStorageKey || fromSettingsKey || envKey || configKey);
 
   return { url: finalUrl, key: finalKey };
 }
@@ -59,14 +122,16 @@ export function getActiveSupabaseCredentials(): { url: string; key: string } {
  * Permanently remembers Supabase credentials in browser storage
  */
 export function saveActiveSupabaseCredentials(url: string, key: string): void {
+  const cleanUrl = normalizeSupabaseUrl(url);
+  const cleanKey = normalizeSupabaseKey(key);
   try {
-    if (url) {
-      localStorage.setItem(SUPABASE_URL_KEY, url.trim());
-      localStorage.setItem('bami_supabase_url', url.trim());
+    if (cleanUrl) {
+      localStorage.setItem(SUPABASE_URL_KEY, cleanUrl);
+      localStorage.setItem('bami_supabase_url', cleanUrl);
     }
-    if (key) {
-      localStorage.setItem(SUPABASE_KEY_KEY, key.trim());
-      localStorage.setItem('bami_supabase_anon_key', key.trim());
+    if (cleanKey) {
+      localStorage.setItem(SUPABASE_KEY_KEY, cleanKey);
+      localStorage.setItem('bami_supabase_anon_key', cleanKey);
     }
   } catch (err) {
     console.error('Could not save Supabase credentials:', err);
@@ -75,8 +140,8 @@ export function saveActiveSupabaseCredentials(url: string, key: string): void {
 
 export function getSupabaseClient(url?: string, key?: string): SupabaseClient | null {
   const creds = getActiveSupabaseCredentials();
-  const finalUrl = (url || creds.url).trim();
-  const finalKey = (key || creds.key).trim();
+  const finalUrl = normalizeSupabaseUrl(url || creds.url);
+  const finalKey = normalizeSupabaseKey(key || creds.key);
 
   if (!finalUrl || !finalKey) {
     return null;

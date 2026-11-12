@@ -36,7 +36,9 @@ import {
   syncToSupabase,
   syncFromSupabase,
   getActiveSupabaseCredentials,
-  saveActiveSupabaseCredentials
+  saveActiveSupabaseCredentials,
+  normalizeSupabaseUrl,
+  normalizeSupabaseKey
 } from '../lib/storage';
 
 interface AdminPanelProps {
@@ -214,8 +216,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setSettingsDraft(finalSettings);
 
     const creds = getActiveSupabaseCredentials();
-    const targetUrl = (finalSettings.supabaseUrl || creds.url).trim();
-    const targetKey = (finalSettings.supabaseAnonKey || creds.key).trim();
+    const targetUrl = normalizeSupabaseUrl(finalSettings.supabaseUrl || creds.url);
+    const targetKey = normalizeSupabaseKey(finalSettings.supabaseAnonKey || creds.key);
+
+    finalSettings.supabaseUrl = targetUrl;
+    finalSettings.supabaseAnonKey = targetKey;
+    setSettingsDraft(finalSettings);
 
     if (targetUrl && targetKey) {
       saveActiveSupabaseCredentials(targetUrl, targetKey);
@@ -227,8 +233,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         setSaveSuccessMessage('تمامی تغییرات، زمان‌بندی فازها، سهامداران و متون صفحه با موفقیت در دیتابیس سوپابیس ذخیره شدند.');
       } else {
         onSave(finalSettings, phasesDraft, shareholdersDraft);
-        setSupabaseSyncStatus({ loading: false, isError: true, msg: res.error });
-        setSaveSuccessMessage(`تغییرات به صورت محلی ذخیره شد، اما در ارسال به سوپابیس خطا رخ داد: ${res.error}`);
+        let errorMsg = res.error || 'خطای ناشناخته';
+        if (errorMsg.includes('Invalid path') || errorMsg.includes('request URL')) {
+          errorMsg = 'آدرس سوپابیس نادرست وارد شده است. آدرس باید دقیقاً به شکل https://YOUR_PROJECT_ID.supabase.co باشد (نه آدرس داشبورد app.supabase.com یا دارای پسوند /rest/v1).';
+        }
+        setSupabaseSyncStatus({ loading: false, isError: true, msg: errorMsg });
+        setSaveSuccessMessage(`تغییرات به صورت محلی ذخیره شد، اما در ارسال به سوپابیس خطا رخ داد: ${errorMsg}`);
       }
     } else {
       onSave(finalSettings, phasesDraft, shareholdersDraft);
@@ -237,26 +247,31 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
     setTimeout(() => {
       setSaveSuccessMessage(null);
-    }, 4500);
+    }, 5500);
   };
 
   const handleTestSupabaseSync = async () => {
     const creds = getActiveSupabaseCredentials();
-    const targetUrl = (settingsDraft.supabaseUrl || creds.url).trim();
-    const targetKey = (settingsDraft.supabaseAnonKey || creds.key).trim();
+    const targetUrl = normalizeSupabaseUrl(settingsDraft.supabaseUrl || creds.url);
+    const targetKey = normalizeSupabaseKey(settingsDraft.supabaseAnonKey || creds.key);
 
     if (!targetUrl || !targetKey) {
       setSupabaseSyncStatus({ isError: true, loading: false, msg: 'لطفاً ابتدا آدرس و کلید Anon سوپابیس را در فیلدهای زیر وارد کنید.' });
       return;
     }
 
+    setSettingsDraft(prev => ({ ...prev, supabaseUrl: targetUrl, supabaseAnonKey: targetKey }));
     saveActiveSupabaseCredentials(targetUrl, targetKey);
     setSupabaseSyncStatus({ loading: true, msg: 'در حال ارسال و ذخیره داده‌ها در سوپابیس...' });
     const res = await syncToSupabase(settingsDraft, phasesDraft, shareholdersDraft, targetUrl, targetKey);
     if (res.success) {
       setSupabaseSyncStatus({ loading: false, msg: 'اتصال برقرار شد و داده‌ها با موفقیت در سوپابیس ذخیره شدند ✓' });
     } else {
-      setSupabaseSyncStatus({ loading: false, isError: true, msg: `خطا در اتصال: ${res.error}` });
+      let errorMsg = res.error || 'خطای ناشناخته';
+      if (errorMsg.includes('Invalid path') || errorMsg.includes('request URL')) {
+        errorMsg = 'آدرس سوپابیس نادرست وارد شده است. آدرس باید به شکل https://YOUR_PROJECT_ID.supabase.co باشد (نه آدرس داشبورد یا دارای پسوند /rest/v1).';
+      }
+      setSupabaseSyncStatus({ loading: false, isError: true, msg: `خطا در اتصال: ${errorMsg}` });
     }
   };
 
@@ -1345,17 +1360,32 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 rounded-2xl bg-slate-950/70 border border-slate-800">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                    آدرس پروژه سوپابیس (Supabase URL)
+                  <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center justify-between">
+                    <span>آدرس پروژه سوپابیس (Supabase URL)</span>
+                    <span className="text-[10px] text-amber-400 font-mono">الگوی صحیح: https://xxxx.supabase.co</span>
                   </label>
                   <input
                     type="text"
                     placeholder="https://xyzcompany.supabase.co"
                     value={settingsDraft.supabaseUrl || ''}
                     onChange={(e) => setSettingsDraft({ ...settingsDraft, supabaseUrl: e.target.value })}
+                    onBlur={(e) => {
+                      const clean = normalizeSupabaseUrl(e.target.value);
+                      if (clean && clean !== e.target.value) {
+                        setSettingsDraft(prev => ({ ...prev, supabaseUrl: clean }));
+                      }
+                    }}
                     className="w-full px-4 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white font-mono text-xs focus:border-cyan-400 focus:outline-none"
                   />
-                  <span className="text-[10px] text-slate-500 mt-1 block">از تنظیمات پروژه سوپابیس: Settings {'>'} API {'>'} Project URL</span>
+                  {settingsDraft.supabaseUrl && normalizeSupabaseUrl(settingsDraft.supabaseUrl) !== settingsDraft.supabaseUrl && (
+                    <div className="text-[11px] text-cyan-300 mt-1 flex items-center gap-1 font-mono bg-cyan-950/60 p-1.5 rounded-lg border border-cyan-800">
+                      <span>✓ اصلاح خودکار به:</span>
+                      <span className="font-bold underline">{normalizeSupabaseUrl(settingsDraft.supabaseUrl)}</span>
+                    </div>
+                  )}
+                  <span className="text-[10px] text-slate-400 mt-1 block leading-relaxed">
+                    توجه: فقط آدرس ریشه API پروژه را وارد نمایید (بدون پسوند rest/v1/ یا آدرس داشبورد app.supabase.com). سیستم به طور هوشمند آن را اصلاح می‌کند.
+                  </span>
                 </div>
 
                 <div>
@@ -1367,6 +1397,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     placeholder="eyJhbGciOiJIUzI1NiIsInR5c..."
                     value={settingsDraft.supabaseAnonKey || ''}
                     onChange={(e) => setSettingsDraft({ ...settingsDraft, supabaseAnonKey: e.target.value })}
+                    onBlur={(e) => {
+                      const clean = normalizeSupabaseKey(e.target.value);
+                      if (clean && clean !== e.target.value) {
+                        setSettingsDraft(prev => ({ ...prev, supabaseAnonKey: clean }));
+                      }
+                    }}
                     className="w-full px-4 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white font-mono text-xs focus:border-cyan-400 focus:outline-none"
                   />
                   <span className="text-[10px] text-slate-500 mt-1 block">از تنظیمات پروژه سوپابیس: Settings {'>'} API {'>'} anon / public key</span>
