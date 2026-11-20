@@ -44,6 +44,11 @@ export interface BamiSettings {
   heroSubtitle: string;
   neuralStatusTitle: string;
   neuralStatusSubtitle: string;
+  neuralLatencyLabel?: string;
+  neuralLatencyValue?: string;
+  neuralGrowthLabel?: string;
+  neuralGrowthValue?: string;
+  neuralHintText?: string;
   progressTitle: string;
   progressDescription: string;
   progressButtonText: string;
@@ -58,6 +63,7 @@ export interface BamiSettings {
   roadmapBadge: string;
   roadmapTitle: string;
   roadmapDescription: string;
+  phaseMilestonesHeading?: string;
 
   // Shareholders section texts
   shareholdersBadge: string;

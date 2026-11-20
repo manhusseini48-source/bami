@@ -130,6 +130,42 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     }
   };
 
+  // Phase Key Milestones CRUD
+  const handleMilestoneChange = (phaseId: number, milestoneIdx: number, value: string) => {
+    setPhasesDraft(prev =>
+      prev.map(p => {
+        if (p.id !== phaseId) return p;
+        const updatedMilestones = [...(p.keyMilestones || [])];
+        updatedMilestones[milestoneIdx] = value;
+        return { ...p, keyMilestones: updatedMilestones };
+      })
+    );
+  };
+
+  const handleAddMilestone = (phaseId: number) => {
+    setPhasesDraft(prev =>
+      prev.map(p => {
+        if (p.id !== phaseId) return p;
+        return {
+          ...p,
+          keyMilestones: [...(p.keyMilestones || []), 'هدف یا دستاورد جدید این فاز'],
+        };
+      })
+    );
+  };
+
+  const handleDeleteMilestone = (phaseId: number, milestoneIdx: number) => {
+    setPhasesDraft(prev =>
+      prev.map(p => {
+        if (p.id !== phaseId) return p;
+        return {
+          ...p,
+          keyMilestones: (p.keyMilestones || []).filter((_, idx) => idx !== milestoneIdx),
+        };
+      })
+    );
+  };
+
   // Shareholders CRUD
   const handleSaveShareholderModal = (e: React.FormEvent) => {
     e.preventDefault();
@@ -676,6 +712,49 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         />
                       </div>
 
+                      {/* Key Milestones Editor */}
+                      <div className="mt-4 pt-3 border-t border-slate-800/80">
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="text-xs font-bold text-cyan-300 flex items-center gap-1.5">
+                            <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                            <span>اهداف و دستاوردهای کلیدی این فاز:</span>
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => handleAddMilestone(phase.id)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-300 text-[11px] font-bold transition-colors"
+                          >
+                            <Plus className="w-3 h-3" />
+                            <span>افزودن مورد جدید</span>
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {(phase.keyMilestones || []).map((milestone, mIdx) => (
+                            <div key={mIdx} className="flex items-center gap-1.5">
+                              <input
+                                type="text"
+                                value={milestone}
+                                onChange={(e) => handleMilestoneChange(phase.id, mIdx, e.target.value)}
+                                placeholder={`هدف ${mIdx + 1}...`}
+                                className="flex-1 px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-200 text-xs focus:border-cyan-400 focus:outline-none"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteMilestone(phase.id, mIdx)}
+                                className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors shrink-0"
+                                title="حذف این مورد"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                        {(!phase.keyMilestones || phase.keyMilestones.length === 0) && (
+                          <p className="text-[11px] text-slate-500">هنوز موردی ثبت نشده است. برای افزودن روی «افزودن مورد جدید» کلیک کنید.</p>
+                        )}
+                      </div>
+
                     </div>
                   );
                 })}
@@ -914,23 +993,74 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-slate-800">
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-300 mb-1">عنوان کارت وضعیت شبکه عصبی</label>
-                      <input
-                        type="text"
-                        value={settingsDraft.neuralStatusTitle}
-                        onChange={(e) => setSettingsDraft({ ...settingsDraft, neuralStatusTitle: e.target.value })}
-                        className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white text-xs"
-                      />
+                  <div className="space-y-4 pt-3 border-t border-slate-800">
+                    <div className="text-xs font-bold text-teal-400">باکس کپسول وضعیت شبکه عصبی در هیرو:</div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-300 mb-1">عنوان کارت شبکه عصبی</label>
+                        <input
+                          type="text"
+                          value={settingsDraft.neuralStatusTitle}
+                          onChange={(e) => setSettingsDraft({ ...settingsDraft, neuralStatusTitle: e.target.value })}
+                          className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-300 mb-1">نسخه موتور عصبی (زیرعنوان)</label>
+                        <input
+                          type="text"
+                          value={settingsDraft.neuralStatusSubtitle}
+                          onChange={(e) => setSettingsDraft({ ...settingsDraft, neuralStatusSubtitle: e.target.value })}
+                          className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white text-xs font-mono"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-300 mb-1">برچسب شاخص اول (تاخیر پردازش)</label>
+                        <input
+                          type="text"
+                          value={settingsDraft.neuralLatencyLabel ?? 'تاخیر پردازش سیناپسی'}
+                          onChange={(e) => setSettingsDraft({ ...settingsDraft, neuralLatencyLabel: e.target.value })}
+                          className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-300 mb-1">مقدار شاخص اول (مثال: 42 ms)</label>
+                        <input
+                          type="text"
+                          value={settingsDraft.neuralLatencyValue ?? '42 ms'}
+                          onChange={(e) => setSettingsDraft({ ...settingsDraft, neuralLatencyValue: e.target.value })}
+                          className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-cyan-300 text-xs font-mono"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-300 mb-1">برچسب شاخص دوم (نرخ رشد ارزش)</label>
+                        <input
+                          type="text"
+                          value={settingsDraft.neuralGrowthLabel ?? 'نرخ رشد ارزش فازها'}
+                          onChange={(e) => setSettingsDraft({ ...settingsDraft, neuralGrowthLabel: e.target.value })}
+                          className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-300 mb-1">مقدار شاخص دوم (مثال: ×۱,۵۰۰)</label>
+                        <input
+                          type="text"
+                          value={settingsDraft.neuralGrowthValue ?? '×۱,۵۰۰'}
+                          onChange={(e) => setSettingsDraft({ ...settingsDraft, neuralGrowthValue: e.target.value })}
+                          className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-emerald-400 text-xs font-mono"
+                        />
+                      </div>
                     </div>
+
                     <div>
-                      <label className="block text-xs font-semibold text-slate-300 mb-1">نسخه موتور عصبی بامی</label>
+                      <label className="block text-xs font-semibold text-slate-300 mb-1">متن راهنمای پایین کارت شبکه عصبی</label>
                       <input
                         type="text"
-                        value={settingsDraft.neuralStatusSubtitle}
-                        onChange={(e) => setSettingsDraft({ ...settingsDraft, neuralStatusSubtitle: e.target.value })}
-                        className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white text-xs font-mono"
+                        value={settingsDraft.neuralHintText ?? 'مکان‌نمای ماوس را برای برانگیختن نرون‌ها حرکت دهید'}
+                        onChange={(e) => setSettingsDraft({ ...settingsDraft, neuralHintText: e.target.value })}
+                        className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white text-xs"
                       />
                     </div>
                   </div>
@@ -1045,6 +1175,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       rows={3}
                       value={settingsDraft.roadmapDescription}
                       onChange={(e) => setSettingsDraft({ ...settingsDraft, roadmapDescription: e.target.value })}
+                      className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 mb-1">تیتر بخش اهداف و دستاوردهای کلیدی هر فاز</label>
+                    <input
+                      type="text"
+                      value={settingsDraft.phaseMilestonesHeading ?? 'اهداف و دستاوردهای کلیدی این فاز:'}
+                      onChange={(e) => setSettingsDraft({ ...settingsDraft, phaseMilestonesHeading: e.target.value })}
                       className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white text-xs"
                     />
                   </div>

@@ -252,7 +252,7 @@ export const RoadmapPhases: React.FC<RoadmapPhasesProps> = ({
                       <div className="md:col-span-7">
                         <h4 className="text-xs font-bold text-slate-300 mb-3 flex items-center gap-1.5">
                           <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-                          <span>اهداف و دستاوردهای کلیدی این فاز:</span>
+                          <span>{settings.phaseMilestonesHeading || 'اهداف و دستاوردهای کلیدی این فاز:'}</span>
                         </h4>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                           {phase.keyMilestones.map((milestone, mIdx) => (

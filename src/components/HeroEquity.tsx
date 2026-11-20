@@ -102,18 +102,18 @@ export const HeroEquity: React.FC<HeroEquityProps> = ({
 
             <div className="grid grid-cols-2 gap-2.5 pt-2 border-t border-slate-800/80 text-xs">
               <div className="p-2 rounded-xl bg-slate-950/70 border border-slate-800">
-                <div className="text-[10px] text-slate-400">تاخیر پردازش سیناپسی</div>
-                <div className="text-sm font-bold text-cyan-300 font-mono tabular-nums">42 ms</div>
+                <div className="text-[10px] text-slate-400">{settings.neuralLatencyLabel || 'تاخیر پردازش سیناپسی'}</div>
+                <div className="text-sm font-bold text-cyan-300 font-mono tabular-nums">{settings.neuralLatencyValue || '42 ms'}</div>
               </div>
               <div className="p-2 rounded-xl bg-slate-950/70 border border-slate-800">
-                <div className="text-[10px] text-slate-400">نرخ رشد ارزش فازها</div>
-                <div className="text-sm font-bold text-emerald-400 font-mono tabular-nums">×۱,۵۰۰</div>
+                <div className="text-[10px] text-slate-400">{settings.neuralGrowthLabel || 'نرخ رشد ارزش فازها'}</div>
+                <div className="text-sm font-bold text-emerald-400 font-mono tabular-nums">{settings.neuralGrowthValue || '×۱,۵۰۰'}</div>
               </div>
             </div>
 
             <div className="mt-3 text-[11px] text-slate-400 flex items-center gap-1.5">
               <Activity className="w-3.5 h-3.5 text-cyan-400" />
-              <span>مکان‌نمای ماوس را برای برانگیختن نرون‌ها حرکت دهید</span>
+              <span>{settings.neuralHintText || 'مکان‌نمای ماوس را برای برانگیختن نرون‌ها حرکت دهید'}</span>
             </div>
           </div>
 

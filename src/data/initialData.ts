@@ -54,6 +54,11 @@ export const INITIAL_SETTINGS: BamiSettings = {
   heroSubtitle: 'ورود به جمع سهام‌داران اولیه نسل جدید هوش مصنوعی یکپارچه تجاری و سازمانی با پتانسیل رشد تصاعدی در ۱۰ فاز استراتژیک.',
   neuralStatusTitle: 'شبکه نرونی شناختی بامی',
   neuralStatusSubtitle: 'Bami Neural Engine v2.4',
+  neuralLatencyLabel: 'تاخیر پردازش سیناپسی',
+  neuralLatencyValue: '42 ms',
+  neuralGrowthLabel: 'نرخ رشد ارزش فازها',
+  neuralGrowthValue: '×۱,۵۰۰',
+  neuralHintText: 'مکان‌نمای ماوس را برای برانگیختن نرون‌ها حرکت دهید',
   progressTitle: 'وضعیت پیشرفت ارزش‌گذاری دور جاری',
   progressDescription: 'با اتمام فاز ۲، ارزش هر سهم از ۱ سنت ($0.010) به ۲.۵ سنت ($0.025) ارتقا می‌یابد (+۱۵۰٪ رشد مستقیم).',
   progressButtonText: 'مشاهده ماشین حساب سهام',
@@ -68,6 +73,7 @@ export const INITIAL_SETTINGS: BamiSettings = {
   roadmapBadge: 'نقشه راه راهبردی ۱۰ فاز توسعه و ارزش‌آفرینی',
   roadmapTitle: 'مسیر ۱۰ برابری تا ۱۵۰۰ برابری ارزش سهام بامی AI',
   roadmapDescription: 'ارزش پروژه و قیمت هر سهم با تکمیل هر فاز بر اساس تارگت‌های از پیش تعیین شده ارتقا می‌یابد. زمان تکمیل هر فاز و مهلت باقی‌مانده به صورت زنده نمایش داده می‌شود.',
+  phaseMilestonesHeading: 'اهداف و دستاوردهای کلیدی این فاز:',
 
   // Shareholders texts
   shareholdersBadge: 'دفتر رسمی و شفاف سهامداران Bami AI',
